@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL =  "https://romantic-optimism-production-2854.up.railway.app";
 
 let currentVideoCount = 8;
 let currentChannelId = "";
