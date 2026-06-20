@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI YouTube Channel Analyzer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #000; color: #fff; }
+    .video-card img { width: 100%; height: 180px; object-fit: cover; }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen p-4 md:p-8">
+
+  <div class="max-w-7xl mx-auto">
+
+    <!-- HEADER -->
+    <div class="text-center mb-10">
+      <h1 class="text-5xl md:text-6xl font-black bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-4">
+        AI YouTube Channel Analyzer
+      </h1>
+      <p class="text-zinc-400 text-lg">Analyze YouTube channels with AI suggestions.</p>
+    </div>
+
+    <!-- INPUT -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 mb-8">
+      <div class="flex flex-col md:flex-row gap-4">
+        <input
+          id="channelInput"
+          type="text"
+          placeholder="Enter YouTube channel name..."
+          class="flex-1 bg-black border border-zinc-700 rounded-2xl px-5 py-4 outline-none text-white"
+        >
+        <button
+          id="analyzeBtn"
+          class="bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl px-8 py-4 font-bold hover:opacity-90"
+        >
+          Analyze Channel
+        </button>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="hidden bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center mb-8">
+      <div class="text-3xl font-bold animate-pulse text-cyan-400">AI is analyzing...</div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result" class="hidden">
+
+      <!-- CHANNEL INFO -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 mb-8">
+        <div class="flex flex-col md:flex-row items-center gap-6">
+          <img id="channelImage" class="w-32 h-32 rounded-full border-4 border-cyan-500" src="">
+          <div class="flex-1">
+            <h2 id="channelName" class="text-3xl font-black mb-4"></h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-black border border-zinc-800 rounded-2xl p-4">
+                <div class="text-zinc-400 mb-1">Subscribers</div>
+                <div id="subs" class="text-2xl font-black text-cyan-400"></div>
+              </div>
+              <div class="bg-black border border-zinc-800 rounded-2xl p-4">
+                <div class="text-zinc-400 mb-1">Views</div>
+                <div id="views" class="text-2xl font-black text-purple-400"></div>
+              </div>
+              <div class="bg-black border border-zinc-800 rounded-2xl p-4">
+                <div class="text-zinc-400 mb-1">Videos</div>
+                <div id="videos" class="text-2xl font-black text-green-400"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEO SEARCH -->
+      <div class="flex gap-4 mb-6">
+        <input
+          id="videoSearch"
+          type="text"
+          placeholder="Search video title..."
+          class="flex-1 bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 outline-none text-white"
+        >
+        <button
+          onclick="filterVideos()"
+          class="bg-cyan-500 px-6 py-4 rounded-2xl font-bold hover:opacity-90"
+        >
+          Search
+        </button>
+      </div>
+
+      <!-- VIDEOS GRID -->
+      <div id="videosContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+      <!-- SHOW MORE -->
+      <div class="text-center mt-10 mb-10">
+        <button
+          id="showMoreBtn"
+          class="bg-purple-600 px-8 py-4 rounded-2xl font-bold hover:opacity-90"
+        >
+          Show More Videos
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>

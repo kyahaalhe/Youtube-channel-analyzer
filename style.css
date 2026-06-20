@@ -1,0 +1,29 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+.hidden {
+  display: none;
+}
+
+.card {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  transition: 0.3s;
+}
+
+.label {
+  color: gray;
+  margin-bottom: 10px;
+}
+
+.value {
+  font-size: 32px;
+  font-weight: bold;
+}
