@@ -6,9 +6,7 @@ const url = require("url");
 const fs = require("fs");
 const path = require("path");
 
-// ✅ API KEY .env FILE SE AA RAHI HAI
 const API_KEY = process.env.YOUTUBE_API_KEY;
-
 const PORT = process.env.PORT || 3000;
 
 function fetchYoutube(apiUrl, res) {
@@ -55,6 +53,10 @@ const server = http.createServer((req, res) => {
 
   } else if (pathname === "/api/channel-videos") {
     const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${q.channelId}&maxResults=${q.maxResults || 8}&order=date&type=video&key=${API_KEY}`;
+    fetchYoutube(apiUrl, res);
+
+  } else if (pathname === "/api/video-details") {
+    const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${q.ids}&key=${API_KEY}`;
     fetchYoutube(apiUrl, res);
 
   } else {
