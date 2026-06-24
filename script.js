@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://romantic-optimism-production-2854.up.railway.app";
+const BACKEND_URL = "https://youtube-channel-analyzer.up.railway.app/";
 
 let currentVideoCount = 8;
 let currentChannelId = "";
