@@ -3,6 +3,8 @@ require('dotenv').config();
 const http = require("http");
 const https = require("https");
 const url = require("url");
+const fs = require("fs");
+const path = require("path");
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const PORT = process.env.PORT || 3000;
@@ -58,14 +60,36 @@ const server = http.createServer((req, res) => {
     fetchYoutube(apiUrl, res);
 
   } else {
-    res.writeHead(200, {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
+    let filePath = "." + pathname;
+    if (filePath === "./") filePath = "./index.html";
+
+    const ext = path.extname(filePath);
+    const mimeTypes = {
+      ".html": "text/html",
+      ".js": "text/javascript",
+      ".css": "text/css",
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".ico": "image/x-icon"
+    };
+    const contentType = mimeTypes[ext] || "text/plain";
+
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("File nahi mili: " + filePath);
+      } else {
+        res.writeHead(200, {
+          "Content-Type": contentType,
+          "Access-Control-Allow-Origin": "*"
+        });
+        res.end(content);
+      }
     });
-    res.end(JSON.stringify({ status: "API Running ✅" }));
   }
 });
 
 server.listen(PORT, () => {
   console.log("✅ Server chal raha hai: http://localhost:" + PORT);
+  console.log("Band karne ke liye Ctrl+C dabao");
 });
