@@ -10,6 +10,19 @@
 
   gtag('config', 'G-JE9K78919T');
 </script>
+    import type { AppProps } from 'next/app';
+import { Analytics } from '@vercel/analytics/next';
+ 
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <>
+      <Component {...pageProps} />
+      <Analytics />
+    </>
+  );
+}
+ 
+export default MyApp;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
