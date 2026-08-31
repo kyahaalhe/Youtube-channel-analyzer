@@ -1,95 +1,195 @@
-require('dotenv').config();
+```js
+require("dotenv").config();
 
-const http = require("http");
 const https = require("https");
-const url = require("url");
 const fs = require("fs");
 const path = require("path");
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
-const PORT = process.env.PORT || 3000;
 
-function fetchYoutube(apiUrl, res) {
-  https.get(apiUrl, (apiRes) => {
-    let data = "";
-    apiRes.on("data", chunk => data += chunk);
-    apiRes.on("end", () => {
-      res.writeHead(200, {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
+// YouTube API request
+function fetchYoutube(apiUrl) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(apiUrl, (apiRes) => {
+        let data = "";
+
+        apiRes.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        apiRes.on("end", () => {
+          resolve({
+            status: apiRes.statusCode || 200,
+            data: data,
+          });
+        });
+      })
+      .on("error", (err) => {
+        reject(err);
       });
-      res.end(data);
-    });
-  }).on("error", (err) => {
-    res.writeHead(500, { "Access-Control-Allow-Origin": "*" });
-    res.end(JSON.stringify({ error: err.message }));
   });
 }
 
-const server = http.createServer((req, res) => {
-  const parsed = url.parse(req.url, true);
-  const pathname = parsed.pathname;
-  const q = parsed.query;
+// Vercel serverless function
+module.exports = async (req, res) => {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "*");
 
   if (req.method === "OPTIONS") {
-    res.writeHead(200, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "*"
-    });
-    res.end();
-    return;
+    return res.status(200).end();
   }
+
+  const pathname = new URL(
+    req.url,
+    `https://${req.headers.host || "localhost"}`
+  ).pathname;
 
   console.log("Request:", pathname);
 
-  if (pathname === "/api/search-channel") {
-    const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(q.q || "")}&maxResults=1&key=${API_KEY}`;
-    fetchYoutube(apiUrl, res);
+  try {
+    // =========================
+    // SEARCH CHANNEL
+    // =========================
+    if (pathname === "/api/search-channel") {
+      const q = req.query.q || "";
 
-  } else if (pathname === "/api/channel-details") {
-    const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${q.id}&key=${API_KEY}`;
-    fetchYoutube(apiUrl, res);
+      const apiUrl =
+        `https://www.googleapis.com/youtube/v3/search` +
+        `?part=snippet` +
+        `&type=channel` +
+        `&q=${encodeURIComponent(q)}` +
+        `&maxResults=1` +
+        `&key=${API_KEY}`;
 
-  } else if (pathname === "/api/channel-videos") {
-    const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${q.channelId}&maxResults=${q.maxResults || 8}&order=date&type=video&key=${API_KEY}`;
-    fetchYoutube(apiUrl, res);
+      const result = await fetchYoutube(apiUrl);
 
-  } else if (pathname === "/api/video-details") {
-    const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${q.ids}&key=${API_KEY}`;
-    fetchYoutube(apiUrl, res);
+      res.setHeader("Content-Type", "application/json");
+      return res.status(result.status).send(result.data);
+    }
 
-  } else {
-    let filePath = "." + pathname;
-    if (filePath === "./") filePath = "./index.html";
+    // =========================
+    // CHANNEL DETAILS
+    // =========================
+    if (pathname === "/api/channel-details") {
+      const id = req.query.id || "";
 
-    const ext = path.extname(filePath);
+      const apiUrl =
+        `https://www.googleapis.com/youtube/v3/channels` +
+        `?part=snippet,statistics` +
+        `&id=${encodeURIComponent(id)}` +
+        `&key=${API_KEY}`;
+
+      const result = await fetchYoutube(apiUrl);
+
+      res.setHeader("Content-Type", "application/json");
+      return res.status(result.status).send(result.data);
+    }
+
+    // =========================
+    // CHANNEL VIDEOS
+    // =========================
+    if (pathname === "/api/channel-videos") {
+      const channelId = req.query.channelId || "";
+      const maxResults = req.query.maxResults || "8";
+
+      const apiUrl =
+        `https://www.googleapis.com/youtube/v3/search` +
+        `?part=snippet` +
+        `&channelId=${encodeURIComponent(channelId)}` +
+        `&maxResults=${encodeURIComponent(maxResults)}` +
+        `&order=date` +
+        `&type=video` +
+        `&key=${API_KEY}`;
+
+      const result = await fetchYoutube(apiUrl);
+
+      res.setHeader("Content-Type", "application/json");
+      return res.status(result.status).send(result.data);
+    }
+
+    // =========================
+    // VIDEO DETAILS
+    // =========================
+    if (pathname === "/api/video-details") {
+      const ids = req.query.ids || "";
+
+      const apiUrl =
+        `https://www.googleapis.com/youtube/v3/videos` +
+        `?part=snippet,statistics,contentDetails` +
+        `&id=${encodeURIComponent(ids)}` +
+        `&key=${API_KEY}`;
+
+      const result = await fetchYoutube(apiUrl);
+
+      res.setHeader("Content-Type", "application/json");
+      return res.status(result.status).send(result.data);
+    }
+
+    // =========================
+    // FRONTEND FILES
+    // =========================
+
+    let requestedPath = pathname;
+
+    if (requestedPath === "/") {
+      requestedPath = "/index.html";
+    }
+
+    const filePath = path.join(
+      process.cwd(),
+      requestedPath.replace(/^\/+/, "")
+    );
+
+    // Security: don't allow files outside project
+    const projectRoot = path.resolve(process.cwd());
+    const resolvedFile = path.resolve(filePath);
+
+    if (
+      resolvedFile !== projectRoot &&
+      !resolvedFile.startsWith(projectRoot + path.sep)
+    ) {
+      return res.status(403).send("Forbidden");
+    }
+
+    if (!fs.existsSync(resolvedFile)) {
+      return res
+        .status(404)
+        .send("File nahi mili: " + requestedPath);
+    }
+
+    const ext = path.extname(resolvedFile).toLowerCase();
+
     const mimeTypes = {
-      ".html": "text/html",
-      ".js": "text/javascript",
-      ".css": "text/css",
+      ".html": "text/html; charset=utf-8",
+      ".js": "text/javascript; charset=utf-8",
+      ".css": "text/css; charset=utf-8",
+      ".json": "application/json",
       ".png": "image/png",
       ".jpg": "image/jpeg",
-      ".ico": "image/x-icon"
+      ".jpeg": "image/jpeg",
+      ".gif": "image/gif",
+      ".svg": "image/svg+xml",
+      ".ico": "image/x-icon",
+      ".webp": "image/webp",
     };
-    const contentType = mimeTypes[ext] || "text/plain";
 
-    fs.readFile(filePath, (err, content) => {
-      if (err) {
-        res.writeHead(404);
-        res.end("File nahi mili: " + filePath);
-      } else {
-        res.writeHead(200, {
-          "Content-Type": contentType,
-          "Access-Control-Allow-Origin": "*"
-        });
-        res.end(content);
-      }
+    const contentType =
+      mimeTypes[ext] || "application/octet-stream";
+
+    const content = fs.readFileSync(resolvedFile);
+
+    res.setHeader("Content-Type", contentType);
+    return res.status(200).send(content);
+  } catch (error) {
+    console.error("Server Error:", error);
+
+    return res.status(500).json({
+      error: "Server error",
+      message: error.message,
     });
   }
-});
-
-server.listen(PORT, () => {
-  console.log("✅ Server chal raha hai: http://localhost:" + PORT);
-  console.log("Band karne ke liye Ctrl+C dabao");
-});
+};
+```
