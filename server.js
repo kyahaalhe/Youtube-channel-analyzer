@@ -1,4 +1,3 @@
-```js
 require('dotenv').config();
 
 const http = require("http");
@@ -94,4 +93,3 @@ server.listen(PORT, () => {
   console.log("✅ Server chal raha hai: http://localhost:" + PORT);
   console.log("Band karne ke liye Ctrl+C dabao");
 });
-```
