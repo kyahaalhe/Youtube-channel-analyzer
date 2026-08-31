@@ -1,58 +1,53 @@
 ```js
-require("dotenv").config();
-
 const https = require("https");
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
 
 function fetchYoutube(apiUrl) {
-  return new Promise(function (resolve, reject) {
-    https
-      .get(apiUrl, function (apiRes) {
-        let data = "";
+  return new Promise((resolve, reject) => {
+    https.get(apiUrl, (apiRes) => {
+      let data = "";
 
-        apiRes.on("data", function (chunk) {
-          data += chunk;
-        });
-
-        apiRes.on("end", function () {
-          resolve({
-            status: apiRes.statusCode || 200,
-            data: data
-          });
-        });
-      })
-      .on("error", function (err) {
-        reject(err);
+      apiRes.on("data", (chunk) => {
+        data += chunk;
       });
+
+      apiRes.on("end", () => {
+        resolve({
+          status: apiRes.statusCode || 200,
+          data: data
+        });
+      });
+
+    }).on("error", (error) => {
+      reject(error);
+    });
   });
 }
 
-module.exports = async function (req, res) {
+module.exports = async (req, res) => {
+
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "*"
-  );
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "*");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  const pathname = req.url.split("?")[0];
-  const queryString = req.url.split("?")[1] || "";
+  const url = new URL(
+    req.url,
+    "https://" + (req.headers.host || "localhost")
+  );
 
-  const params = new URLSearchParams(queryString);
-
-  console.log("Request:", pathname);
+  const pathname = url.pathname;
+  const params = url.searchParams;
 
   try {
+
     // SEARCH CHANNEL
     if (pathname === "/api/search-channel") {
+
       const q = params.get("q") || "";
 
       const apiUrl =
@@ -69,8 +64,10 @@ module.exports = async function (req, res) {
       return res.status(result.status).send(result.data);
     }
 
+
     // CHANNEL DETAILS
     if (pathname === "/api/channel-details") {
+
       const id = params.get("id") || "";
 
       const apiUrl =
@@ -85,8 +82,10 @@ module.exports = async function (req, res) {
       return res.status(result.status).send(result.data);
     }
 
+
     // CHANNEL VIDEOS
     if (pathname === "/api/channel-videos") {
+
       const channelId = params.get("channelId") || "";
       const maxResults = params.get("maxResults") || "8";
 
@@ -105,8 +104,10 @@ module.exports = async function (req, res) {
       return res.status(result.status).send(result.data);
     }
 
+
     // VIDEO DETAILS
     if (pathname === "/api/video-details") {
+
       const ids = params.get("ids") || "";
 
       const apiUrl =
@@ -121,9 +122,15 @@ module.exports = async function (req, res) {
       return res.status(result.status).send(result.data);
     }
 
-    return res.status(404).send("API route not found");
+
+    return res.status(404).json({
+      error: "API route not found",
+      path: pathname
+    });
+
   } catch (error) {
-    console.error("Server Error:", error);
+
+    console.error("FUNCTION ERROR:", error);
 
     return res.status(500).json({
       error: "Server error",
