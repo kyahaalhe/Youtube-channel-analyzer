@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://agent-6a968bcb1a0857bb7--youtube-channel-analyze.netlify.app/";
+const BACKEND_URL = "https://youtube-channel-analyz.netlify.app/";
 
 let currentVideoCount = 8;
 let currentChannelId = "";
